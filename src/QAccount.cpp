@@ -1,8 +1,8 @@
-#include "qaccount.h"
+#include "QAccount.h"
 
 namespace QUtility
 {
-    CAccount::CAccount(const char *account_file_path)
+    Account::Account(const char *account_file_path)
     {
         char text_line[240];
         std::ifstream fin;
@@ -16,7 +16,7 @@ namespace QUtility
         fin.close();
     }
 
-    bool CAccount::Match(char *text_line)
+    bool Account::Match(char *text_line)
     {
         sscanf(
             text_line, "%u,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s",
@@ -32,7 +32,7 @@ namespace QUtility
         return active == 1;
     }
 
-    void CAccount::Display() const
+    void Account::Display() const
     {
         std::cout << "ACCOUNT SUMMARY:" << std::endl;
         std::cout << "------LINK MODE:" << _linkMode << std::endl;

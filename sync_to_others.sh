@@ -1,2 +1,2 @@
-cp include/qaccount.h ~/projects/md_recorder/include/
-cp lib/libqtools.so ~/projects/md_recorder/lib/qtools.so
+cp include/QAccount.h /usr/local/include
+cp lib/libqtools.so /usr/local/lib

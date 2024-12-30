@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -11,7 +13,7 @@ namespace QUtility
     typedef char UTypeAppId[60];
     typedef char UTypeAuthenticCode[60];
 
-    class CAccount
+    class Account
     {
     private:
         unsigned active;
@@ -27,7 +29,7 @@ namespace QUtility
         bool Match(char *text_line);
 
     public:
-        CAccount(const char *account_file_path);
+        Account(const char *account_file_path);
         void Display() const;
         char *GetLinkMode() { return _linkMode; }
         char *GetFrntAddr() { return _frntAddr; }

@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.5)
 
 project (demo)
 
-set (SRC_LIST ${PROJECT_SOURCE_DIR}/src/qaccount.cpp)
+set (SRC_LIST ${PROJECT_SOURCE_DIR}/src/QAccount.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
