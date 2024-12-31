@@ -2,7 +2,7 @@
 
 namespace QUtility
 {
-    Account::Account(const char *account_file_path)
+    QAccount::QAccount(const char *account_file_path)
     {
         char text_line[240];
         std::ifstream fin;
@@ -16,7 +16,7 @@ namespace QUtility
         fin.close();
     }
 
-    bool Account::Match(char *text_line)
+    bool QAccount::Match(char *text_line)
     {
         sscanf(
             text_line, "%u,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s",
@@ -32,7 +32,7 @@ namespace QUtility
         return active == 1;
     }
 
-    void Account::Display() const
+    void QAccount::Display() const
     {
         std::cout << "ACCOUNT SUMMARY:" << std::endl;
         std::cout << "------LINK MODE:" << _linkMode << std::endl;
