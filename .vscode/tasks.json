@@ -8,6 +8,8 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "QCalendar.cpp",
+                "-I../include",
                 "-o",
                 "${workspaceFolder}/bin/${fileBasenameNoExtension}"
             ],
