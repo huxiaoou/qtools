@@ -69,7 +69,7 @@ namespace QUtility
     std::ostream &operator<<(std::ostream &os, const QSection &section);
 
     bool match_trade_date(
-        const char *test_date,
+        const time_t *test_datetime,
         char *this_date, char *prev_date,
         const char *calendarPath);
 
