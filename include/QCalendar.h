@@ -1,5 +1,8 @@
-#include <ctime>
+#pragma once
+
 #include <string.h>
+#include <stdlib.h>
+#include <ctime>
 #include <iostream>
 
 namespace QUtility
@@ -7,14 +10,18 @@ namespace QUtility
     class QTimePoint
     {
     private:
-        std::time_t _ts;
-        std::tm _tm;
+        time_t _ts;
+        tm _tm;
 
     public:
-        std::tm *getTm() { return &_tm; }
-        std::time_t getTs() const { return _ts; }
-        void setTm(std::tm *tm) { _tm = *tm; }
-        void setTs(std::time_t ts) { _ts = ts; }
+        QTimePoint();
+        QTimePoint(const time_t ts);
+        QTimePoint(const char *datetime, const char *format);
+        tm *getTm() { return &_tm; }
+        time_t *getTs() { return &_ts; }
+        time_t getTsVal() const { return _ts; }
+        void setTm(tm *tm) { _tm = *tm; }
+        void setTs(time_t ts) { _ts = ts; }
         void SyncTsFrmTm() { _ts = mktime(&_tm); }
         void SyncTmFrmTs() { _tm = *localtime(&_ts); }
         void print_datetime(char *dest, const char *format) const
@@ -34,11 +41,13 @@ namespace QUtility
         }
     };
 
+    std::ostream &operator<<(std::ostream &os, const QTimePoint &timepoint);
+
     class QSection
     {
     private:
-        QTimePoint _bgn;
-        QTimePoint _end;
+        QTimePoint *_bgn;
+        QTimePoint *_end;
         char _type;
         char _trade_date[12];
         char _sec_lbl_ngt_0[12];
@@ -47,12 +56,24 @@ namespace QUtility
 
     public:
         QSection(const char *this_date, const char *prev_date, const char type);
-        char *GetTradeDate() { return _trade_date; }
-        char *GetSecLblNgt0() { return _sec_lbl_ngt_0; }
-        char *GetSecLblNgt1() { return _sec_lbl_ngt_1; }
-        char *GetSecLblDay() { return _sec_lbl_day; }
-        void Display() const;
+        ~QSection();
+        const char *GetTradeDate() const { return _trade_date; }
+        const char *GetSecLblNgt0() const { return _sec_lbl_ngt_0; }
+        const char *GetSecLblNgt1() const { return _sec_lbl_ngt_1; }
+        const char *GetSecLblDay() const { return _sec_lbl_day; }
+        char GetType() const { return _type; }
+        const QTimePoint *GetBgn() const { return _bgn; }
+        const QTimePoint *GetEnd() const { return _end; }
     };
 
+    std::ostream &operator<<(std::ostream &os, const QSection &section);
+
+    bool match_trade_date(
+        const char *test_date,
+        char *this_date, char *prev_date,
+        const char *calendarPath);
+
+    // FOR TEST
     void test_section();
+    void test_calendar(const char *calendarPath);
 }
