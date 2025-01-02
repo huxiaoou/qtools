@@ -83,7 +83,7 @@ namespace QUtility
         return os;
     }
 
-    bool match_trade_date(
+    void match_trade_date(
         const time_t *test_datetime,
         char *this_date, char *prev_date,
         const char *calendarPath)
@@ -115,10 +115,10 @@ namespace QUtility
                     strptime(_end_time, format, &_tm);
                     *this_datetime = mktime(&_tm);
                     if (*this_datetime >= *test_datetime)
-                        return true;
+                        return;
                 }
             }
-            return false;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -128,7 +128,8 @@ namespace QUtility
         char this_date[] = "20250102";
         QSection *sd = new QSection(this_date, prev_date, 'D');
         QSection *sn = new QSection(this_date, prev_date, 'N');
-        std::cout << *sd << "\n" << *sn;
+        std::cout << *sd << "\n"
+                  << *sn;
     }
 
     void test_calendar(const char *calendarPath)
@@ -139,40 +140,35 @@ namespace QUtility
 
         std::cout << SEP << std::endl;
         QTimePoint *now = new QTimePoint();
-        if (match_trade_date(now->getTs(), this_date, prev_date, calendarPath))
-        {
-            std::cout << "Prev date = " << prev_date << std::endl;
-            std::cout << "Now = " << *now << std::endl;
-            std::cout << "This date = " << this_date << std::endl;
-        }
+        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
+        std::cout << "Now = " << *now << std::endl;
+        std::cout << "Prev date = " << prev_date << std::endl;
+        std::cout << "This date = " << this_date << std::endl;
         delete now;
 
         std::cout << SEP << std::endl;
         now = new QTimePoint("20241231 14:59:00", NULL);
-        if (match_trade_date(now->getTs(), this_date, prev_date, calendarPath))
-        {
-            std::cout << "Prev date = " << prev_date << std::endl;
-            std::cout << "Now = " << *now << std::endl;
-            std::cout << "This date = " << this_date << std::endl;
-        }
+        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
+        std::cout << "Now = " << *now << std::endl;
+        std::cout << "Prev date = " << prev_date << std::endl;
+        std::cout << "This date = " << this_date << std::endl;
+        delete now;
 
         std::cout << SEP << std::endl;
         now = new QTimePoint("20241231 15:30:00", NULL);
-        if (match_trade_date(now->getTs(), this_date, prev_date, calendarPath))
-        {
-            std::cout << "Prev date = " << prev_date << std::endl;
-            std::cout << "Now = " << *now << std::endl;
-            std::cout << "This date = " << this_date << std::endl;
-        }
+        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
+        std::cout << "Now = " << *now << std::endl;
+        std::cout << "Prev date = " << prev_date << std::endl;
+        std::cout << "This date = " << this_date << std::endl;
+        delete now;
 
         std::cout << SEP << std::endl;
         now = new QTimePoint("20241231 16:30:00", NULL);
-        if (match_trade_date(now->getTs(), this_date, prev_date, calendarPath))
-        {
-            std::cout << "Prev date = " << prev_date << std::endl;
-            std::cout << "Now = " << *now << std::endl;
-            std::cout << "This date = " << this_date << std::endl;
-        }
+        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
+        std::cout << "Now = " << *now << std::endl;
+        std::cout << "Prev date = " << prev_date << std::endl;
+        std::cout << "This date = " << this_date << std::endl;
+        delete now;
 
         std::cout << SEP << std::endl;
     }
