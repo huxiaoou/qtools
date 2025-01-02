@@ -56,4 +56,20 @@ namespace QUtility
                   << "  sec_lbl_day='" << _sec_lbl_day << "',\n"
                   << ")" << std::endl;
     }
+
+    void test_section()
+    {
+        char prev_date[] = "20240101";
+        char this_date[] = "20240103";
+        QSection *sd = new QSection(this_date, prev_date, 'D');
+        sd->Display();
+
+        std::cout << "\n";
+        QSection *sn = new QSection(this_date, prev_date, 'N');
+        sn->Display();
+
+        std::cout << "\n";
+        QSection *se = new QSection(this_date, prev_date, 'e');
+        se->Display();
+    }
 }

@@ -4,8 +4,6 @@
 
 namespace QUtility
 {
-    void print_tm_to_string(char *dest, std::tm *x);
-
     class QTimePoint
     {
     private:
@@ -55,4 +53,6 @@ namespace QUtility
         char *GetSecLblDay() { return _sec_lbl_day; }
         void Display() const;
     };
+
+    void test_section();
 }
