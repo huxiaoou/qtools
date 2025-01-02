@@ -17,9 +17,8 @@ namespace QUtility
         QTimePoint();
         QTimePoint(const time_t ts);
         QTimePoint(const char *datetime, const char *format);
-        tm *getTm() { return &_tm; }
-        time_t *getTs() { return &_ts; }
-        time_t getTsVal() const { return _ts; }
+        const tm *getTm() const { return &_tm; }
+        const time_t *getTs() const { return &_ts; }
         void setTm(tm *tm) { _tm = *tm; }
         void setTs(time_t ts) { _ts = ts; }
         void SyncTsFrmTm() { _ts = mktime(&_tm); }
@@ -39,6 +38,11 @@ namespace QUtility
             sprintf(dest, format,
                     _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday);
         }
+        bool operator>(const QTimePoint &other) const { return _ts > other._ts; }
+        bool operator>=(const QTimePoint &other) const { return _ts >= other._ts; }
+        bool operator<(const QTimePoint &other) const { return _ts < other._ts; }
+        bool operator<=(const QTimePoint &other) const { return _ts <= other._ts; }
+        bool operator==(const QTimePoint &other) const { return _ts == other._ts; }
     };
 
     std::ostream &operator<<(std::ostream &os, const QTimePoint &timepoint);
@@ -64,6 +68,7 @@ namespace QUtility
         char GetType() const { return _type; }
         const QTimePoint *GetBgn() const { return _bgn; }
         const QTimePoint *GetEnd() const { return _end; }
+        bool hasTimepoint(const QTimePoint *tp) const { return (*_bgn <= *tp) && (*tp <= *_end); }
     };
 
     std::ostream &operator<<(std::ostream &os, const QSection &section);
@@ -74,6 +79,7 @@ namespace QUtility
         const char *calendarPath);
 
     // FOR TEST
+    void test_timepoint();
     void test_section();
     void test_calendar(const char *calendarPath);
 }

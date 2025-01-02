@@ -16,6 +16,7 @@ namespace QUtility
 
     QTimePoint::QTimePoint(const char *datetime, const char *format)
     {
+        memset(&_tm, 0, sizeof(_tm));
         if (format == NULL)
             format = "%Y%m%d %H:%M:%S";
         strptime(datetime, format, &_tm);
@@ -39,7 +40,7 @@ namespace QUtility
             char _end_time[] = "YYYYMMDD 16:00:00";
             strncpy(_end_time, this_date, 8);
             _end = new QTimePoint(_end_time, NULL);
-            _bgn = new QTimePoint(_end->getTsVal() - 60 * 60 * 8);
+            _bgn = new QTimePoint(*_end->getTs() - 60 * 60 * 8);
             strcpy(_sec_lbl_ngt_0, "");
             strcpy(_sec_lbl_ngt_1, "");
             _end->print_date(_sec_lbl_day, NULL);
@@ -49,7 +50,7 @@ namespace QUtility
             char _bgn_time[] = "YYYYMMDD 20:00:00";
             strncpy(_bgn_time, prev_date, 8);
             _bgn = new QTimePoint(_bgn_time, NULL);
-            _end = new QTimePoint(_bgn->getTsVal() + 60 * 60 * 8);
+            _end = new QTimePoint(*_bgn->getTs() + 60 * 60 * 8);
             _bgn->print_date(_sec_lbl_ngt_0, NULL);
             _end->print_date(_sec_lbl_ngt_1, NULL);
             strcpy(_sec_lbl_day, "");
@@ -70,8 +71,8 @@ namespace QUtility
     std::ostream &operator<<(std::ostream &os, const QSection &section)
     {
         os << "QSection(\n"
-           << "  bgnTS=" << section.GetBgn()->getTsVal() << ",\n"
-           << "  endTS=" << section.GetEnd()->getTsVal() << ",\n"
+           << "  bgnTS=" << *section.GetBgn()->getTs() << ",\n"
+           << "  endTS=" << *section.GetEnd()->getTs() << ",\n"
            << "  bgn='" << *section.GetBgn() << "',\n"
            << "  end='" << *section.GetEnd() << "',\n"
            << "  type='" << section.GetType() << "',\n"
@@ -122,14 +123,43 @@ namespace QUtility
         }
     }
 
+    void test_timepoint()
+    {
+        QTimePoint t1 = QUtility::QTimePoint("20250101 09:00:00", NULL);
+        QTimePoint t2 = QUtility::QTimePoint("20250102 08:00:00", NULL);
+
+        std::cout << "t1 = " << t1 << "\n"
+                  << "t2 = " << t2 << std::endl;
+        if (t1 < t2)
+            std::cout << "t1 < t2" << std::endl;
+        if (t1 <= t2)
+            std::cout << "t1 <= t2" << std::endl;
+        if (t2 > t1)
+            std::cout << "t2 > t1" << std::endl;
+        if (t2 >= t1)
+            std::cout << "t2 >= t1" << std::endl;
+    }
+
     void test_section()
     {
         char prev_date[] = "20241231";
         char this_date[] = "20250102";
-        QSection *sd = new QSection(this_date, prev_date, 'D');
         QSection *sn = new QSection(this_date, prev_date, 'N');
-        std::cout << *sd << "\n"
-                  << *sn;
+        QSection *sd = new QSection(this_date, prev_date, 'D');
+        std::cout << *sn << "\n"
+                  << *sd << std::endl;
+
+        QTimePoint *tp = new QTimePoint("20250101 09:00:00", NULL);
+        std::cout << "tp=" << *tp << std::endl;
+        std::cout << "Night section has the tp? " << (sn->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
+        std::cout << "Day   section has the tp? " << (sd->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
+        delete tp;
+
+        tp = new QTimePoint("20250102 09:00:00", NULL);
+        std::cout << "tp=" << *tp << std::endl;
+        std::cout << "Night section has the tp? " << (sn->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
+        std::cout << "Day   section has the tp? " << (sd->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
+        delete tp;
     }
 
     void test_calendar(const char *calendarPath)
@@ -171,5 +201,10 @@ namespace QUtility
         delete now;
 
         std::cout << SEP << std::endl;
+        QTimePoint *t1 = new QTimePoint();
+        QTimePoint *t2 = new QTimePoint();
+        std::cout << "(t1 = " << *t1 << ")" << ((t1 > t2) ? " > " : " <= ") << "(t2 = " << *t2 << ")" << std::endl;
+        delete t1;
+        delete t2;
     }
 }
