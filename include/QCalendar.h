@@ -1,57 +1,53 @@
 #pragma once
 
-#include <string.h>
 #include <stdlib.h>
+#include <cstring>
 #include <ctime>
 #include <iostream>
+#include <chrono>
 
 namespace QUtility
 {
-    class QTimePoint
+    using namespace std::chrono;
+    class QTimestamp
     {
     private:
-        time_t _ts;
-        tm _tm;
+        int64_t _ts;
 
     public:
-        QTimePoint();
-        QTimePoint(const time_t ts);
-        QTimePoint(const char *datetime, const char *format);
-        const tm *getTm() const { return &_tm; }
-        const time_t *getTs() const { return &_ts; }
-        void setTm(tm *tm) { _tm = *tm; }
-        void setTs(time_t ts) { _ts = ts; }
-        void SyncTsFrmTm() { _ts = mktime(&_tm); }
-        void SyncTmFrmTs() { _tm = *localtime(&_ts); }
-        void print_datetime(char *dest, const char *format) const
-        {
-            if (format == NULL)
-                format = "%04d%02d%02d %02d:%02d:%02d";
-            sprintf(dest, format,
-                    _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday,
-                    _tm.tm_hour, _tm.tm_min, _tm.tm_sec);
-        }
-        void print_date(char *dest, const char *format) const
-        {
-            if (format == NULL)
-                format = "%04d%02d%02d";
-            sprintf(dest, format,
-                    _tm.tm_year + 1900, _tm.tm_mon + 1, _tm.tm_mday);
-        }
-        bool operator>(const QTimePoint &other) const { return _ts > other._ts; }
-        bool operator>=(const QTimePoint &other) const { return _ts >= other._ts; }
-        bool operator<(const QTimePoint &other) const { return _ts < other._ts; }
-        bool operator<=(const QTimePoint &other) const { return _ts <= other._ts; }
-        bool operator==(const QTimePoint &other) const { return _ts == other._ts; }
+        QTimestamp();
+        QTimestamp(const int64_t ts);
+        QTimestamp(const char *datetime, const char *format);
+
+        const unsigned MilliSeconds() const { return _ts % 1000; };
+        const time_t Seconds() const { return _ts / 1000; }
+        int64_t getTs() const { return _ts; }
+
+        void SyncTpFrmTm(std::tm *tm, unsigned int millisec);
+        const std::tm *GetTm() const;
+        void PrintDate(char *dest, const char *format) const;
+        void PrintDateTime(char *dest, const char *format) const;
+
+        bool operator>(const QTimestamp &other) const { return _ts > other._ts; }
+        bool operator>=(const QTimestamp &other) const { return _ts >= other._ts; }
+        bool operator<(const QTimestamp &other) const { return _ts < other._ts; }
+        bool operator<=(const QTimestamp &other) const { return _ts <= other._ts; }
+        bool operator==(const QTimestamp &other) const { return _ts == other._ts; }
+        QTimestamp operator+(const int64_t delta) const { return QTimestamp(_ts + delta); }
+        QTimestamp operator-(const int64_t delta) const { return QTimestamp(_ts - delta); }
+        QTimestamp *shift_milliSeconds(int64_t delta) const { return new QTimestamp(_ts + delta); }
+        QTimestamp *shift_seconds(int64_t delta) const { return new QTimestamp(_ts + delta * 1000); }
+        QTimestamp *shift_minutes(int64_t delta) const { return new QTimestamp(_ts + delta * 60 * 1000); }
+        QTimestamp *shift_hours(int64_t delta) const { return new QTimestamp(_ts + delta * 60 * 60 * 1000); }
     };
 
-    std::ostream &operator<<(std::ostream &os, const QTimePoint &timepoint);
+    std::ostream &operator<<(std::ostream &os, const QTimestamp &tp);
 
     class QSection
     {
     private:
-        QTimePoint *_bgn;
-        QTimePoint *_end;
+        QTimestamp *_bgn;
+        QTimestamp *_end;
         char _type;
         char _trade_date[12];
         char _sec_lbl_ngt_0[12];
@@ -66,15 +62,15 @@ namespace QUtility
         const char *GetSecLblNgt1() const { return _sec_lbl_ngt_1; }
         const char *GetSecLblDay() const { return _sec_lbl_day; }
         char GetType() const { return _type; }
-        const QTimePoint *GetBgn() const { return _bgn; }
-        const QTimePoint *GetEnd() const { return _end; }
-        bool hasTimepoint(const QTimePoint *tp) const { return (*_bgn <= *tp) && (*tp <= *_end); }
+        const QTimestamp *GetBgn() const { return _bgn; }
+        const QTimestamp *GetEnd() const { return _end; }
+        bool hasTimepoint(const QTimestamp *tp) const { return (*_bgn <= *tp) && (*tp <= *_end); }
     };
 
     std::ostream &operator<<(std::ostream &os, const QSection &section);
 
     void match_trade_date(
-        const time_t *test_datetime,
+        const QTimestamp &test_timestamp,
         char *this_date, char *prev_date,
         const char *calendarPath);
 

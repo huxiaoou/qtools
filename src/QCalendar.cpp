@@ -2,58 +2,90 @@
 
 namespace QUtility
 {
-    QTimePoint::QTimePoint()
+    QTimestamp::QTimestamp()
     {
-        time(&_ts);
-        SyncTmFrmTs();
+        _ts = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     }
 
-    QTimePoint::QTimePoint(const time_t ts)
+    QTimestamp::QTimestamp(const int64_t ts)
     {
         _ts = ts;
-        SyncTmFrmTs();
     }
 
-    QTimePoint::QTimePoint(const char *datetime, const char *format)
+    QTimestamp::QTimestamp(const char *datetime, const char *format)
     {
-        memset(&_tm, 0, sizeof(_tm));
+        std::tm *_tm = new ::std::tm;
+        std::memset(_tm, 0, sizeof(_tm));
         if (format == NULL)
             format = "%Y%m%d %H:%M:%S";
-        strptime(datetime, format, &_tm);
-        SyncTsFrmTm();
+        char *endptr = strptime(datetime, format, _tm);
+        if (*endptr == '.')
+            endptr++; // Skip the '.'
+        SyncTpFrmTm(_tm, unsigned(atoi(endptr)));
     }
 
-    std::ostream &operator<<(std::ostream &os, const QTimePoint &timepoint)
+    void QTimestamp::SyncTpFrmTm(std::tm *tm, unsigned int millisec)
+    {
+        _ts = std::mktime(tm) * 1000 + millisec;
+    }
+
+    const std::tm *QTimestamp::GetTm() const
+    {
+        std::time_t t = Seconds();
+        std::tm *_tm = std::localtime(&t);
+        return _tm;
+    }
+
+    void QTimestamp::PrintDate(char *dest, const char *format) const
+    {
+        const std::tm *_tm = GetTm();
+        if (format == NULL)
+            format = "%04d%02d%02d";
+        sprintf(dest, format, _tm->tm_year + 1900, _tm->tm_mon + 1, _tm->tm_mday);
+    }
+
+    void QTimestamp::PrintDateTime(char *dest, const char *format) const
+    {
+        const std::tm *_tm = GetTm();
+        if (format == NULL)
+            format = "%04d%02d%02d %02d:%02d:%02d.%03d";
+        sprintf(dest, format,
+                _tm->tm_year + 1900, _tm->tm_mon + 1, _tm->tm_mday,
+                _tm->tm_hour, _tm->tm_min, _tm->tm_sec,
+                MilliSeconds());
+    }
+
+    std::ostream &operator<<(std::ostream &os, const QTimestamp &tp)
     {
         char output[32];
-        timepoint.print_datetime(output, NULL);
+        tp.PrintDateTime(output, NULL);
         os << output;
         return os;
     }
 
     QSection::QSection(const char *this_date, const char *prev_date, const char type)
     {
-        strcpy(_trade_date, this_date);
+        std::strcpy(_trade_date, this_date);
         _type = type;
         if (_type == 'D')
         {
-            char _end_time[] = "YYYYMMDD 16:00:00";
-            strncpy(_end_time, this_date, 8);
-            _end = new QTimePoint(_end_time, NULL);
-            _bgn = new QTimePoint(*_end->getTs() - 60 * 60 * 8);
-            strcpy(_sec_lbl_ngt_0, "");
-            strcpy(_sec_lbl_ngt_1, "");
-            _end->print_date(_sec_lbl_day, NULL);
+            char _end_time[] = "YYYYMMDD 16:00:00.000";
+            std::strncpy(_end_time, this_date, 8);
+            _end = new QTimestamp(_end_time, NULL);
+            _bgn = _end->shift_hours(-8);
+            std::strcpy(_sec_lbl_ngt_0, "");
+            std::strcpy(_sec_lbl_ngt_1, "");
+            _end->PrintDate(_sec_lbl_day, NULL);
         }
         else if (_type == 'N')
         {
-            char _bgn_time[] = "YYYYMMDD 20:00:00";
-            strncpy(_bgn_time, prev_date, 8);
-            _bgn = new QTimePoint(_bgn_time, NULL);
-            _end = new QTimePoint(*_bgn->getTs() + 60 * 60 * 8);
-            _bgn->print_date(_sec_lbl_ngt_0, NULL);
-            _end->print_date(_sec_lbl_ngt_1, NULL);
-            strcpy(_sec_lbl_day, "");
+            char _bgn_time[] = "YYYYMMDD 20:00:00.000";
+            std::strncpy(_bgn_time, prev_date, 8);
+            _bgn = new QTimestamp(_bgn_time, NULL);
+            _end = _bgn->shift_hours(8);
+            _bgn->PrintDate(_sec_lbl_ngt_0, NULL);
+            _end->PrintDate(_sec_lbl_ngt_1, NULL);
+            std::strcpy(_sec_lbl_day, "");
         }
         else
         {
@@ -71,8 +103,8 @@ namespace QUtility
     std::ostream &operator<<(std::ostream &os, const QSection &section)
     {
         os << "QSection(\n"
-           << "  bgnTS=" << *section.GetBgn()->getTs() << ",\n"
-           << "  endTS=" << *section.GetEnd()->getTs() << ",\n"
+           << "  bgnTS=" << section.GetBgn()->getTs() << ",\n"
+           << "  endTS=" << section.GetEnd()->getTs() << ",\n"
            << "  bgn='" << *section.GetBgn() << "',\n"
            << "  end='" << *section.GetEnd() << "',\n"
            << "  type='" << section.GetType() << "',\n"
@@ -85,7 +117,7 @@ namespace QUtility
     }
 
     void match_trade_date(
-        const time_t *test_datetime,
+        const QTimestamp &test_timestamp,
         char *this_date, char *prev_date,
         const char *calendarPath)
     {
@@ -99,23 +131,19 @@ namespace QUtility
         {
             char line[60];
             char trade_date[12];
-            const char *format = "%Y%m%d %H:%M:%S";
-            char _end_time[] = "YYYYMMDD 16:00:00";
-            tm _tm;
-            time_t *this_datetime = new time_t;
+            char _end_time[] = "YYYYMMDD 16:00:00.000";
 
-            strcpy(prev_date, "");
-            strcpy(this_date, "");
+            std::strcpy(prev_date, "");
+            std::strcpy(this_date, "");
             while (fgets(line, sizeof(line), file))
             {
-                if (sscanf(line, "%[0-9]\r\n", (char *)trade_date) == 1)
+                if (std::sscanf(line, "%[0-9]\r\n", (char *)trade_date) == 1)
                 {
-                    strcpy(prev_date, this_date);
-                    strcpy(this_date, trade_date);
-                    strncpy(_end_time, this_date, 8);
-                    strptime(_end_time, format, &_tm);
-                    *this_datetime = mktime(&_tm);
-                    if (*this_datetime >= *test_datetime)
+                    std::strcpy(prev_date, this_date);
+                    std::strcpy(this_date, trade_date);
+                    std::strncpy(_end_time, this_date, 8);
+                    QTimestamp this_timestamp(_end_time, NULL);
+                    if (this_timestamp >= test_timestamp)
                         return;
                 }
             }
@@ -125,9 +153,19 @@ namespace QUtility
 
     void test_timepoint()
     {
-        QTimePoint t1 = QUtility::QTimePoint("20250101 09:00:00", NULL);
-        QTimePoint t2 = QUtility::QTimePoint("20250102 08:00:00", NULL);
+        QTimestamp tp0;
+        QTimestamp tp1(1);
+        QTimestamp tp2("20240512 09:00:00.123", NULL);
+        QTimestamp tp3 = tp2 + 2000;
+        QTimestamp tp4 = tp3 - 5124;
+        std::cout << tp0 << std::endl;
+        std::cout << tp1 << std::endl;
+        std::cout << tp2 << std::endl;
+        std::cout << tp3 << std::endl;
+        std::cout << tp4 << std::endl;
 
+        QTimestamp t1 = tp2;
+        QTimestamp t2 = tp3;
         std::cout << "t1 = " << t1 << "\n"
                   << "t2 = " << t2 << std::endl;
         if (t1 < t2)
@@ -149,13 +187,13 @@ namespace QUtility
         std::cout << *sn << "\n"
                   << *sd << std::endl;
 
-        QTimePoint *tp = new QTimePoint("20250101 09:00:00", NULL);
+        QTimestamp *tp = new QTimestamp("20250101 09:00:00.000", NULL);
         std::cout << "tp=" << *tp << std::endl;
         std::cout << "Night section has the tp? " << (sn->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
         std::cout << "Day   section has the tp? " << (sd->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
         delete tp;
 
-        tp = new QTimePoint("20250102 09:00:00", NULL);
+        tp = new QTimestamp("20250102 09:00:00.000", NULL);
         std::cout << "tp=" << *tp << std::endl;
         std::cout << "Night section has the tp? " << (sn->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
         std::cout << "Day   section has the tp? " << (sd->hasTimepoint(tp) ? 'Y' : 'N') << std::endl;
@@ -169,40 +207,36 @@ namespace QUtility
         char prev_date[12] = "";
 
         std::cout << SEP << std::endl;
-        QTimePoint *now = new QTimePoint();
-        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
-        std::cout << "Now = " << *now << std::endl;
+        QTimestamp now;
+        match_trade_date(now, this_date, prev_date, calendarPath);
+        std::cout << "Now = " << now << std::endl;
         std::cout << "Prev date = " << prev_date << std::endl;
         std::cout << "This date = " << this_date << std::endl;
-        delete now;
 
         std::cout << SEP << std::endl;
-        now = new QTimePoint("20241231 14:59:00", NULL);
-        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
-        std::cout << "Now = " << *now << std::endl;
+        now = QTimestamp("20241231 14:59:00.000", NULL);
+        match_trade_date(now, this_date, prev_date, calendarPath);
+        std::cout << "Now = " << now << std::endl;
         std::cout << "Prev date = " << prev_date << std::endl;
         std::cout << "This date = " << this_date << std::endl;
-        delete now;
 
         std::cout << SEP << std::endl;
-        now = new QTimePoint("20241231 15:30:00", NULL);
-        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
-        std::cout << "Now = " << *now << std::endl;
+        now = QTimestamp("20241231 15:30:00.000", NULL);
+        match_trade_date(now, this_date, prev_date, calendarPath);
+        std::cout << "Now = " << now << std::endl;
         std::cout << "Prev date = " << prev_date << std::endl;
         std::cout << "This date = " << this_date << std::endl;
-        delete now;
 
         std::cout << SEP << std::endl;
-        now = new QTimePoint("20241231 16:30:00", NULL);
-        match_trade_date(now->getTs(), this_date, prev_date, calendarPath);
-        std::cout << "Now = " << *now << std::endl;
+        now = QTimestamp("20241231 16:30:00.000", NULL);
+        match_trade_date(now, this_date, prev_date, calendarPath);
+        std::cout << "Now = " << now << std::endl;
         std::cout << "Prev date = " << prev_date << std::endl;
         std::cout << "This date = " << this_date << std::endl;
-        delete now;
 
         std::cout << SEP << std::endl;
-        QTimePoint *t1 = new QTimePoint();
-        QTimePoint *t2 = new QTimePoint();
+        QTimestamp *t1 = new QTimestamp();
+        QTimestamp *t2 = new QTimestamp();
         std::cout << "(t1 = " << *t1 << ")" << ((t1 > t2) ? " > " : " <= ") << "(t2 = " << *t2 << ")" << std::endl;
         delete t1;
         delete t2;
