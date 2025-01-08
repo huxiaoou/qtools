@@ -1,4 +1,5 @@
 #include "QCalendar.h"
+#include "QWidgets.h"
 
 int main()
 {
@@ -7,4 +8,5 @@ int main()
     QUtility::test_timepoint();
     QUtility::test_section();
     QUtility::test_calendar(CALENDAR_PATH);
+    QUtility::test_widgets();
 };

@@ -4,6 +4,7 @@ project(qtools)
 
 set(SRC_LIST ${PROJECT_SOURCE_DIR}/src/QAccount.cpp
     ${PROJECT_SOURCE_DIR}/src/QCalendar.cpp
+    ${PROJECT_SOURCE_DIR}/src/QWidgets.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

@@ -9,6 +9,7 @@
                 "-g",
                 "${file}",
                 "QCalendar.cpp",
+                "QWidgets.cpp",
                 "-I../include",
                 "-o",
                 "${workspaceFolder}/bin/${fileBasenameNoExtension}"
