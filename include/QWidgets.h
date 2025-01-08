@@ -4,7 +4,7 @@
 namespace QUtility
 {
     bool checkDirExistence(const char *dirPath);
-    void checkAndMkDir(const char *dirPath);
+    void checkAndMkdir(const char *dirPath);
 
     void test_widgets();
 }

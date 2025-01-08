@@ -8,7 +8,7 @@ namespace QUtility
         return stat(dirPath, &s) == 0 && S_ISDIR(s.st_mode);
     }
 
-    void checkAndMkDir(const char *dirPath)
+    void checkAndMkdir(const char *dirPath)
     {
         if (!checkDirExistence(dirPath))
             mkdir(dirPath, 0744); 
@@ -32,6 +32,6 @@ namespace QUtility
             std::cout << "Path = " << p1 << " DOES NOT exist." << std::endl;
 
         const char *p2 = "/home/ubuntu/tmp/test_dir";
-        checkAndMkDir(p2);
+        checkAndMkdir(p2);
     }
 }
