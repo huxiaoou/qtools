@@ -23,6 +23,7 @@ namespace QUtility
         const time_t Seconds() const { return _ts / 1000; }
         int64_t getTs() const { return _ts; }
 
+        void reSync();
         void SyncTpFrmTm(std::tm *tm, unsigned int millisec);
         const std::tm *GetTm() const;
         void PrintDate(char *dest, const char *format) const;

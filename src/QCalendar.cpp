@@ -24,6 +24,11 @@ namespace QUtility
         SyncTpFrmTm(_tm, unsigned(atoi(endptr)));
     }
 
+    void QTimestamp::reSync()
+    {
+        _ts = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
     void QTimestamp::SyncTpFrmTm(std::tm *tm, unsigned int millisec)
     {
         _ts = std::mktime(tm) * 1000 + millisec;
@@ -238,6 +243,11 @@ namespace QUtility
         QTimestamp *t1 = new QTimestamp();
         QTimestamp *t2 = new QTimestamp();
         std::cout << "(t1 = " << *t1 << ")" << ((t1 > t2) ? " > " : " <= ") << "(t2 = " << *t2 << ")" << std::endl;
+
+        unsigned repeat_times = 100000;
+        for (unsigned i = 0; i < repeat_times; i++)
+            t1->reSync();
+        std::cout << "After " << repeat_times << " times of resync, t1 = " << *t1 << std::endl;
         delete t1;
         delete t2;
     }
